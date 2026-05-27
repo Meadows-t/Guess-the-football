@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spot the Ball Quiz</title>
+  <!-- Link to external CSS file -->
+  style.css
+</head>
+<body>
+  <h1>Spot the Ball Quiz</h1>
+  <!-- Scoreboard displays current round and total score -->
+  <div id="scoreboard">
+    Round <span id="round-num">1</span>/5 &ndash; Score: <span id="score-total">0</span>
+  </div>
+  <!-- Image container for the current round -->
+  <div id="image-container">
+    <img id="game-image" src="images/round1.jpg" alt="Round 1 image" />
+  </div>
+  <!-- Instruction or feedback text -->
+  <p id="instruction">Click where you think the ball is in the image.</p>
+  <!-- Next Round button (hidden initially) -->
+  <button id="next-btn" style="display: none;">Next Round</button>
+  <!-- Result display (hidden until the end of the game) -->
+  <div id="result" style="display: none;"></div>
+  <!-- Include the game logic script at the end of the body -->
+  <script src="script.js" defer></script>
+</body>
+</html>
