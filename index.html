@@ -4,26 +4,243 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spot the Ball Quiz</title>
-  <!-- Link to external CSS file -->
-  style.css
+  <!-- Inline CSS for layout and styling -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+      background-color: #f0f0f0;
+    }
+    h1 { margin-bottom: 15px; }
+    #scoreboard { font-weight: bold; margin-bottom: 10px; }
+    #image-container {
+      position: relative;              /* Create a positioning context for markers */
+      display: inline-block;
+      border: 2px solid #444;
+      margin-bottom: 10px;
+    }
+    #game-image {
+      max-width: 100%;                /* Scale image for mobile screens */
+      height: auto;
+      cursor: crosshair;              /* Crosshair cursor for desktop users */
+      display: block;
+    }
+    #instruction { font-style: italic; margin: 12px 0; }
+    /* Style for buttons */
+    #confirm-btn, #next-btn {
+      padding: 8px 16px;
+      font-size: 1em;
+      cursor: pointer;
+      margin: 5px;
+    }
+    /* Marker icon styling */
+    .marker {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      pointer-events: none;           /* Allow clicks to pass through marker */
+    }
+    .marker.actual {
+      border: 2px solid red;          /* Red outline to highlight actual ball marker */
+      border-radius: 50%;
+    }
+    /* Dotted line style */
+    .dotted-line {
+      position: absolute;
+      border-top: 2px dashed red;
+      pointer-events: none;
+      transform-origin: 0 0;         /* Rotate around top-left corner */
+    }
+  </style>
 </head>
 <body>
   <h1>Spot the Ball Quiz</h1>
-  <!-- Scoreboard displays current round and total score -->
+  <!-- Scoreboard: shows current round out of 5 and total score -->
   <div id="scoreboard">
     Round <span id="round-num">1</span>/5 &ndash; Score: <span id="score-total">0</span>
   </div>
-  <!-- Image container for the current round -->
+  <!-- Image container for the game; image and markers will be inside this -->
   <div id="image-container">
-    <img id="game-image" src="images/round1.jpg" alt="Round 1 image" />
+    <!-- Round image where the user will place guesses (initially round 1 image) -->
+    images/round1.jpg
   </div>
-  <!-- Instruction or feedback text -->
-  <p id="instruction">Click where you think the ball is in the image.</p>
-  <!-- Next Round button (hidden initially) -->
+  <!-- Instruction text (updated or hidden depending on game state) -->
+  <p id="instruction">Tap on the image to place your guess, then press "Confirm Guess".</p>
+  <!-- Confirm Guess button (enabled after a guess is placed) -->
+  <button id="confirm-btn" style="display: none;">Confirm Guess</button>
+  <!-- Next Round button (shown after confirming a guess, except after final round) -->
   <button id="next-btn" style="display: none;">Next Round</button>
-  <!-- Result display (hidden until the end of the game) -->
-  <div id="result" style="display: none;"></div>
-  <!-- Include the game logic script at the end of the body -->
-  <script src="script.js" defer></script>
+  <!-- Result/feedback text for each round and final result -->
+  <div id="result" style="margin-top: 15px; font-weight: bold;"></div>
+
+  <!-- Inline JavaScript for game logic -->
+  <script>
+    // Game configuration: 5 rounds with image paths and true ball coordinates.
+    // TODO: Replace image paths and coordinates with actual images and positions.
+    const rounds = [
+      { image: "images/round1.jpg", ballX: 150, ballY: 100 },
+      { image: "images/round2.jpg", ballX: 200, ballY: 180 },
+      { image: "images/round3.jpg", ballX: 75,  ballY: 220 },
+      { image: "images/round4.jpg", ballX: 300, ballY: 140 },
+      { image: "images/round5.jpg", ballX: 250, ballY: 90 }
+    ];
+    const markerImgSrc = "images/ball_marker.png";  // Path to the football marker icon (placeholder)
+
+    // State variables
+    let currentRound = 0;
+    let totalScore = 0;
+    let roundActive = true;           // True until guess is confirmed
+    let guessMarker = null;           // HTML element for the user's guess marker
+    let actualMarker = null;          // HTML element for the actual ball marker
+    let lineElement = null;           // HTML element representing the dotted line
+
+    // Get references to key DOM elements
+    const imageContainer = document.getElementById("image-container");
+    const gameImage      = document.getElementById("game-image");
+    const roundNumSpan   = document.getElementById("round-num");
+    const scoreTotalSpan = document.getElementById("score-total");
+    const instructionText = document.getElementById("instruction");
+    const confirmBtn     = document.getElementById("confirm-btn");
+    const nextBtn        = document.getElementById("next-btn");
+    const resultDiv      = document.getElementById("result");
+
+    // Initialize first round
+    startRound(0);
+
+    function startRound(index) {
+      currentRound = index;
+      roundActive = true;
+      // Update scoreboard for current round and ensure initial score display is up-to-date
+      roundNumSpan.textContent = currentRound + 1;
+      scoreTotalSpan.textContent = totalScore;
+      // Set the image for this round
+      gameImage.src = rounds[currentRound].image;
+      // Reset/hide any previous markers, line, buttons, and texts
+      if (guessMarker) { guessMarker.remove(); guessMarker = null; }
+      if (actualMarker) { actualMarker.remove(); actualMarker = null; }
+      if (lineElement) { lineElement.remove(); lineElement = null; }
+      instructionText.style.display = "block";
+      instructionText.textContent = (currentRound === 0)
+        ? 'Tap on the image to place your guess, then press "Confirm Guess".'
+        : 'Tap to adjust your guess, then press "Confirm Guess".';
+      resultDiv.style.display = "none";
+      resultDiv.textContent = "";
+      confirmBtn.style.display = "none";  // hide Confirm until a guess is placed
+      confirmBtn.disabled = true;
+      nextBtn.style.display = "none";
+    }
+
+    // Handle image clicks/taps for placing or moving the guess marker
+    gameImage.addEventListener("click", function(event) {
+      if (!roundActive) return;   // If round is over (guess confirmed), ignore further taps
+      // Calculate click coordinates relative to the image container (to account for border offset)
+      const containerRect = imageContainer.getBoundingClientRect();
+      const clickX = event.clientX - containerRect.left - imageContainer.clientLeft;
+      const clickY = event.clientY - containerRect.top - imageContainer.clientTop;
+      // If a guess marker already exists, move it; otherwise, create a new marker
+      if (guessMarker) {
+        // Move existing guess marker to new guessed location
+        guessMarker.style.left = (clickX - 15) + "px";
+        guessMarker.style.top  = (clickY - 15) + "px";
+      } else {
+        // Create a new guess marker (football icon) at the guessed location
+        guessMarker = document.createElement("img");
+        guessMarker.src = markerImgSrc;
+        guessMarker.className = "marker guess";
+        guessMarker.style.left = (clickX - 15) + "px";  // offset by half marker width (15px)
+        guessMarker.style.top  = (clickY - 15) + "px";  // offset by half marker height
+        imageContainer.appendChild(guessMarker);
+      }
+      // Enable and show the "Confirm Guess" button now that there's a guess
+      confirmBtn.disabled = false;
+      confirmBtn.style.display = "inline-block";
+    });
+
+    // When "Confirm Guess" is clicked, lock in the guess and show results for this round
+    confirmBtn.addEventListener("click", function() {
+      if (!guessMarker) return;  // No guess placed (shouldn't happen if button is enabled correctly)
+      // Prevent further guessing in this round
+      roundActive = false;
+      instructionText.style.display = "none";   // hide instruction after confirmation
+      confirmBtn.style.display = "none";        // hide Confirm button once guess is confirmed
+
+      // Calculate the distance between guess and actual ball position
+      // First, get current image's display size and scale actual coordinates accordingly
+      const containerRect = imageContainer.getBoundingClientRect();
+      const displayWidth = containerRect.width;
+      const displayHeight = containerRect.height;
+      // Compute actual ball position in current displayed image coordinates
+      const actualX = (rounds[currentRound].ballX / gameImage.naturalWidth) * displayWidth;
+      const actualY = (rounds[currentRound].ballY / gameImage.naturalHeight) * displayHeight;
+      // Parse the guess marker's center position (add back the offset 15px to get center coords)
+      const guessCenterX = parseFloat(guessMarker.style.left) + 15;
+      const guessCenterY = parseFloat(guessMarker.style.top) + 15;
+      // Calculate Euclidean distance between guessed point and actual ball point
+      const dx = guessCenterX - actualX;
+      const dy = guessCenterY - actualY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Award points based on how close the guess is to the actual ball (smaller distance = more points)
+      let roundPoints = 0;
+      if (distance < 20) {
+        roundPoints = 10;    // very close
+      } else if (distance < 50) {
+        roundPoints = 5;     // fairly close
+      } else if (distance < 100) {
+        roundPoints = 2;     // not too far
+      } else {
+        roundPoints = 0;     // far off
+      }
+      totalScore += roundPoints;
+      scoreTotalSpan.textContent = totalScore;  // update total score on scoreboard
+
+      // Place a marker at the actual ball's position (with a red border)
+      actualMarker = document.createElement("img");
+      actualMarker.src = markerImgSrc;
+      actualMarker.className = "marker actual";
+      actualMarker.style.left = (actualX - 15) + "px";
+      actualMarker.style.top  = (actualY - 15) + "px";
+      imageContainer.appendChild(actualMarker);
+
+      // Draw a red dotted line connecting the guess and actual positions for visual feedback
+      const angle = Math.atan2(actualY - guessCenterY, actualX - guessCenterX);
+      const angleDeg = angle * (180 / Math.PI);
+      lineElement = document.createElement("div");
+      lineElement.className = "dotted-line";
+      lineElement.style.width = distance + "px";
+      lineElement.style.left = guessCenterX + "px";
+      lineElement.style.top  = guessCenterY + "px";
+      lineElement.style.transform = "rotate(" + angleDeg + "deg)";
+      imageContainer.appendChild(lineElement);
+      // Ensure line appears behind markers by re-appending markers (to bring them to front)
+      if (guessMarker) imageContainer.appendChild(guessMarker);
+      if (actualMarker) imageContainer.appendChild(actualMarker);
+
+      // Show feedback text for this round and (if applicable) the "Next Round" button
+      if (currentRound === rounds.length - 1) {
+        // Last round: compute final result (1 to 5) from totalScore
+        let finalRating;
+        if (totalScore >= 40) finalRating = 5;
+        else if (totalScore >= 30) finalRating = 4;
+        else if (totalScore >= 20) finalRating = 3;
+        else if (totalScore >= 10) finalRating = 2;
+        else finalRating = 1;
+        resultDiv.textContent = `Game Over! Total Score: ${totalScore}. Your result: ${finalRating} out of 5.`;
+        resultDiv.style.display = "block";
+        nextBtn.style.display = "none";   // No "Next Round" after final
+      } else {
+        // Not last round: show distance and points for this round, and reveal Next button
+        resultDiv.textContent = `You were ${Math.round(distance)} pixels away, earning ${roundPoints} point${roundPoints !== 1 ? "s" : ""}.`;
+        resultDiv.style.display = "block";
+        nextBtn.style.display = "inline-block";
+      }
+    });
+
+    // On "Next Round", advance to the next round
+    nextBtn.addEventListener("click", function() {
+      startRound(currentRound + 1);
+    });
+  </script>
 </body>
 </html>
