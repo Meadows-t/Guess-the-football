@@ -7,13 +7,13 @@ body {
 h1 { margin-bottom: 15px; }
 #scoreboard { font-weight: bold; margin-bottom: 10px; }
 #image-container {
-  position: relative;   /* Allows absolute positioning for markers/line inside */
+  position: relative;        /* establish positioning context for markers */
   display: inline-block;
   border: 2px solid #444;
   margin-bottom: 10px;
 }
 #game-image {
-  max-width: 100%;      /* Make image responsive for mobile (fits container width) */
+  max-width: 100%;           /* scale image to fit mobile screen width */
   height: auto;
   cursor: crosshair;
   display: block;
@@ -27,17 +27,18 @@ h1 { margin-bottom: 15px; }
 }
 .marker {
   position: absolute;
-  width: 30px;
-  height: 30px;
-  pointer-events: none;  /* Let clicks pass through markers to image */
+  width: 20px; height: 20px;  /* smaller marker size (20x20 px) */
+  z-index: 10;                /* ensure marker draws above the image */
+  pointer-events: none;       /* allow clicks to pass through to image */
 }
 .marker.actual {
-  border: 2px solid red; /* Highlight the actual ball marker with red border */
+  border: 2px solid red;      /* highlight actual ball marker with red outline */
   border-radius: 50%;
 }
 .dotted-line {
   position: absolute;
   border-top: 2px dashed red;
   pointer-events: none;
-  transform-origin: 0 0;  /* So rotation occurs around the line's starting point */
+  transform-origin: 0 0;      /* make rotation pivot at line's start */
+  z-index: 5;                 /* under markers, but above image */
 }
