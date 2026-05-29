@@ -4,28 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spot the Ball Quiz</title>
-  <!-- Link to external CSS file -->
+  <!-- Link to CSS -->
   style.css
 </head>
 <body>
   <h1>Spot the Ball Quiz</h1>
-  <!-- Scoreboard: shows current round and total score -->
   <div id="scoreboard">
     Round <span id="round-num">1</span>/5 &ndash; Score: <span id="score-total">0</span>
   </div>
-  <!-- Image container for the current round -->
   <div id="image-container">
-    <!-- Round image for guessing: ensure the <img> is present so it loads properly -->
-    <img id="game-image" src="images/round1.jpg" alt="Round 1 image" />
+    <!-- Round image with id for scripting -->
+    images/round1.jpg
   </div>
-  <!-- Instruction/feedback text -->
   <p id="instruction">Tap/click the image to place your guess, then press "Confirm Guess".</p>
-  <!-- Buttons for confirming guess and proceeding to next round -->
   <button id="confirm-btn" style="display: none;" disabled>Confirm Guess</button>
   <button id="next-btn" style="display: none;">Next Round</button>
-  <!-- Result display area (distance/points feedback, final result) -->
   <div id="result"></div>
-  <!-- Include the script at end of body so that DOM elements are loaded before script runs -->
-  <script src="script.js"></script>
+  <!-- Load the script at end to ensure elements exist before script runs -->
+  script.js</script>
 </body>
 </html>
