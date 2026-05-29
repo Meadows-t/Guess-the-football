@@ -1,58 +1,43 @@
-/* Basic style resets and layout */
 body {
   font-family: Arial, sans-serif;
-  text-align: center;               /* Center align all text */
+  text-align: center;
   margin: 20px;
-  background-color: #f0f0f0;        /* Light gray background for contrast */
+  background-color: #f0f0f0;
 }
-
-h1 {
-  margin-bottom: 15px;
-}
-
-#scoreboard {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
+h1 { margin-bottom: 15px; }
+#scoreboard { font-weight: bold; margin-bottom: 10px; }
 #image-container {
+  position: relative;   /* Allows absolute positioning for markers/line inside */
   display: inline-block;
-  position: relative;              /* Allows absolutely positioned elements (e.g., markers) inside */
   border: 2px solid #444;
   margin-bottom: 10px;
 }
-
 #game-image {
-  max-width: 100%;                /* Ensure image scales for smaller screens */
+  max-width: 100%;      /* Make image responsive for mobile (fits container width) */
   height: auto;
-  cursor: crosshair;              /* Crosshair cursor to indicate click target */
+  cursor: crosshair;
+  display: block;
 }
-
-/* Optional marker style for showing guessed or actual positions (if desired) */
-.marker {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: rgba(255, 0, 0, 0.7); /* semi-transparent red */
-  border: 2px solid #fff;
-  border-radius: 50%;
-  pointer-events: none;           /* so clicking the marker doesn't trigger the image click again */
-}
-
-/* Simple style for instruction/feedback text */
-#instruction {
-  font-style: italic;
-  margin-bottom: 10px;
-}
-
-#next-btn {
-  margin-top: 10px;
+#instruction { font-style: italic; margin: 12px 0; }
+#confirm-btn, #next-btn {
   padding: 8px 16px;
   font-size: 1em;
   cursor: pointer;
+  margin: 5px;
 }
-
-#result {
-  margin-top: 15px;
-  font-weight: bold;
+.marker {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  pointer-events: none;  /* Let clicks pass through markers to image */
+}
+.marker.actual {
+  border: 2px solid red; /* Highlight the actual ball marker with red border */
+  border-radius: 50%;
+}
+.dotted-line {
+  position: absolute;
+  border-top: 2px dashed red;
+  pointer-events: none;
+  transform-origin: 0 0;  /* So rotation occurs around the line's starting point */
 }
